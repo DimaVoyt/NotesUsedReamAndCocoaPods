@@ -12,6 +12,14 @@ class MainViewController: UIViewController {
     private let notesService: ManipulationNoteService
     private let results: Results<RealmObjectNotesInfo>
     private var notificationToken: NotificationToken?
+    
+    private var tableView: UITableView = {
+        let tableview = UITableView()
+        tableview.register(CustomTableViewCell.self,
+                           forCellReuseIdentifier: CustomTableViewCell.identifier)
+        tableview.translatesAutoresizingMaskIntoConstraints = false
+        return tableview
+    }()
 
     init(notesService: ManipulationNoteService) {
         self.notesService = notesService
@@ -31,10 +39,6 @@ class MainViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus.rectangle.fill"), style: .plain, target: self, action: #selector(didButtonTapped))
-        
-        let realm = try! Realm()
-        let results = realm.objects(RealmObjectNotesInfo.self)
-        
         notificationToken = results.observe { [weak self] (changes: RealmCollectionChange) in
             guard let tableView = self?.tableView else { return }
             switch changes {
@@ -60,23 +64,13 @@ class MainViewController: UIViewController {
         navigationController?.pushViewController(vc, animated: true)
     }
     
-    private var tableView: UITableView = {
-        let tableview = UITableView()
-        tableview.register(CustomTableViewCell.self,
-                           forCellReuseIdentifier: CustomTableViewCell.identifier)
-        tableview.translatesAutoresizingMaskIntoConstraints = false
-        return tableview
-    }()
-    
     func setupTableView() {
         view.addSubview(tableView)
-
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
     }
-
 }
 
 extension MainViewController: UITableViewDelegate, UITableViewDataSource {
@@ -95,11 +89,9 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
         let item = results[indexPath.row]
         let vc = NoteInfoViewController(notesInfo: item)
         navigationController?.pushViewController(vc, animated: true)
-        
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -109,13 +101,10 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] action, _, completion in
             guard let self = self else { return }
-            
             let item = self.results[indexPath.row]
             self.notesService.deleteNote(id: item.id)
-            
             completion(true)
         }
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }
-
 }

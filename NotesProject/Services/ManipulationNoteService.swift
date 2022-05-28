@@ -28,7 +28,6 @@ class ManipulationNoteService {
     
     func updateNote(id: String, update: (RealmObjectNotesInfo) -> Void) {
         let realm = try! Realm(configuration: realmConfig)
-        
         if let note = realm.object(ofType: RealmObjectNotesInfo.self, forPrimaryKey: id) {
             try! realm.write {
                 update(note)
@@ -38,7 +37,6 @@ class ManipulationNoteService {
     
     func deleteNote(id: String) {
         let realm = try! Realm(configuration: realmConfig)
-        
         if let note = realm.object(ofType: RealmObjectNotesInfo.self, forPrimaryKey: id) {
             try! realm.write {
                 realm.delete(note)
